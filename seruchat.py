@@ -1,7 +1,5 @@
 import socketio
-from urllib.parse import parse_qs
 from aiohttp import web
-import json
 
 sio = socketio.AsyncServer()
 app = web.Application()
@@ -15,7 +13,6 @@ async def connect(sid, data):
 
 @sio.on('login', namespace='/chat')
 async def login(sid,data):
-    print(data)
     #Если есть поле name и оно не совпадает с теми что уже есть
     if 'name' in data and data['name'] not in users.values() and data['name'] != "":
         users[sid] = [data['name'],True if 'token' in data.keys() and data['token']=='secret' else False]
@@ -28,14 +25,14 @@ async def login(sid,data):
 
 @sio.on('chat_message', namespace='/chat')
 async def message(sid, data):
-
     await sio.emit('reply', {"name": users[sid][0], "message": data, "admin":users[sid][1]}, room='chaters', namespace='/chat')
 
 
 @sio.on('disconnect', namespace='/chat')
 async def disconnect(sid):
     sio.leave_room(sid,'chaters')
-    await sio.emit('reply', {"name": users[sid][0], "message": "Отключился", "admin":users[sid][1]}, room='chaters', namespace='/chat')
+    if(sid in users):
+        await sio.emit('reply', {"name": users[sid][0], "message": "Отключился", "admin":users[sid][1]}, room='chaters', namespace='/chat')
 
 
 if __name__ == '__main__':
