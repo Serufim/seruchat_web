@@ -1,5 +1,9 @@
 import socketio
+import os
+import aiohttp_cors
 from aiohttp import web
+from dotenv import load_dotenv
+load_dotenv()
 
 sio = socketio.AsyncServer()
 app = web.Application()
@@ -7,6 +11,9 @@ sio.attach(app)
 
 users = dict()
 slaves_count = 0
+
+async def check_connection(request):
+    return web.json_response({"power":True})
 
 @sio.on('connect', namespace='/chat')
 async def connect(sid, data):
@@ -18,6 +25,7 @@ async def connect(sid, data):
 @sio.on('login', namespace='/chat')
 async def login(sid,data):
     global slaves_count
+    print(data)
     #Если есть поле name и оно не совпадает с теми что уже есть
     if 'name' in data and data['name'] not in users.values() and data['name'] != "":
         users[sid] = [data['name'],True if 'token' in data.keys() and data['token']=='secret' else False]
@@ -43,9 +51,21 @@ async def disconnect(sid):
         await sio.emit('reply', {"name": users[sid][0], "message": "Отключился", "admin":users[sid][1]}, room='chaters', namespace='/chat')
         del users[sid]
     else:
-        slaves_count -=1
+        slaves_count -=1    
     await sio.emit('user_stat',{"users":len(users),"slaves":slaves_count})
 
 
+# Configure default CORS settings.
+cors = aiohttp_cors.setup(app, defaults={
+    "*": aiohttp_cors.ResourceOptions(
+            allow_credentials=True,
+            expose_headers="*",
+            allow_headers="*",
+        )
+})
+
+# Configure CORS on all routes.
+cors.add(app.router.add_get('/check',check_connection));
+
 if __name__ == '__main__':
-    web.run_app(app, host='127.0.0.1',port=3000)
+    web.run_app(app, host=os.getenv("HOST"),port=os.getenv("PORT"))

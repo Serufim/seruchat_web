@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 python-socketio = "*"
 aiohttp = "*"
+aiohttp-cors = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
