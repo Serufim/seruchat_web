@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  chat:
+    container_name: "seruchat_web"
+    build: .
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    command: "gunicorn seruchat:my_web_app -b :8000 --worker-class aiohttp.GunicornWebWorker --reload"
+
+  redis:
+    container_name: "seruchat_redis"
+    restart: always
+    ports:
+      - 6379:6379
+    image: redis:latest
+    volumes:
+      - ./redis:/data

@@ -8,6 +8,7 @@ python-socketio = "*"
 aiohttp = "*"
 aiohttp-cors = "*"
 python-dotenv = "*"
+gunicorn = "*"
 
 [dev-packages]
 
